@@ -56,7 +56,7 @@
             font-size: 0.9rem;
         }
 
-        /* כרטיסיית יתרת בנק ראשית */
+        /* כרטיסיית יתרת פתיחה בבנק */
         .main-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -114,7 +114,7 @@
             margin-top: 4px;
         }
 
-        /* סרגל התקדמות */
+        /* סרגל התקדמות ויתרת חוב */
         .progress-section {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -128,8 +128,14 @@
         .progress-header {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             font-size: 0.9rem;
             color: var(--text-sub);
+        }
+
+        .debt-left {
+            color: var(--accent-color);
+            font-weight: 700;
         }
 
         .progress-bar-bg {
@@ -267,11 +273,11 @@
             </div>
         </div>
 
-        <!-- סרגל התקדמות -->
+        <!-- סרגל התקדמות ויתרת חוב -->
         <div class="progress-section">
             <div class="progress-header">
-                <span>התקדמות סגירת החוב</span>
-                <span id="progressText">0 מתוך 34 שולמו</span>
+                <span id="progressText">0 מתוך 34 שולמו (0%)</span>
+                <span class="debt-left" id="debtLeftText">יתרת חוב: 76,547.85 ₪</span>
             </div>
             <div class="progress-bar-bg">
                 <div class="progress-bar-fill" id="progressBar"></div>
@@ -285,6 +291,7 @@
     <script>
         const CAR_PAYMENT = 2251.41;
         const TOTAL_PAYMENTS = 34;
+        const TOTAL_DEBT = TOTAL_PAYMENTS * CAR_PAYMENT; // 76,547.85 ₪
 
         function updateAll() {
             const initialBank = parseFloat(document.getElementById('initialBank').value) || 0;
@@ -300,27 +307,29 @@
                 const salary = parseFloat(savedSalaries[i]) || 0;
                 const isCompleted = savedStates[i] || false;
 
-                // חישוב נשאר מהמשכורת באותו חודש
                 const leftFromSalary = salary > 0 ? salary - CAR_PAYMENT : 0;
                 const salaryLeftElem = document.getElementById(`left-${i}`);
                 if (salaryLeftElem) {
                     salaryLeftElem.innerText = leftFromSalary.toLocaleString('he-IL', { maximumFractionDigits: 2 }) + ' ₪';
                 }
 
-                // אם החודש סומן כסגור/שולם, זה משפיע על יתרת הבנק
                 if (isCompleted) {
                     completedCount++;
                     currentBank += (salary - CAR_PAYMENT);
                 }
             }
 
-            // עדכון יתרת הבנק הראשית
+            // חישוב יתרת החוב שנותרה
+            const remainingDebt = TOTAL_DEBT - (completedCount * CAR_PAYMENT);
+
+            // עדכון יתרת הבנק
             document.getElementById('totalBankCalc').innerText = currentBank.toLocaleString('he-IL', { maximumFractionDigits: 2 }) + ' ₪';
 
-            // עדכון סרגל התקדמות
+            // עדכון פס התקדמות ויתרת חוב
             const percentage = (completedCount / TOTAL_PAYMENTS) * 100;
             document.getElementById('progressBar').style.width = percentage + '%';
             document.getElementById('progressText').innerText = `${completedCount} מתוך ${TOTAL_PAYMENTS} שולמו (${percentage.toFixed(0)}%)`;
+            document.getElementById('debtLeftText').innerText = `יתרת חוב: ${remainingDebt.toLocaleString('he-IL', { maximumFractionDigits: 2 })} ₪`;
         }
 
         function generatePayments() {
@@ -393,7 +402,7 @@
             if (localStorage.getItem('initialBank')) {
                 document.getElementById('initialBank').value = localStorage.getItem('initialBank');
             }
-            generatePayments();
+            generate_payments_init = generatePayments();
         };
     </script>
 </body>
